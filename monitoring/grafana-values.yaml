@@ -1,0 +1,22 @@
+# Grafana Helm values — 部署到 ns-monitoring
+namespaceOverride: ns-monitoring
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+adminPassword: admin
+
+service:
+  type: ClusterIP
+  port: 3000
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      url: http://prometheus-server.ns-monitoring.svc.cluster.local
+      access: proxy
+      isDefault: true

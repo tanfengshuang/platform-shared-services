@@ -1,0 +1,43 @@
+name: Deploy Shared Platform Tools
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'monitoring/**'
+      - 'devops/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::879866609:role/github-actions-eks-deployer
+        aws-region: us-east-1
+
+    - name: Update Kubeconfig for EKS
+      run: |
+        aws eks update-kubeconfig --region us-east-1 --name core-platform-cluster
+
+    - name: Deploy Grafana
+      if: github.event.head_commit.modified[0] == 'monitoring/grafana-values.yaml'
+      run: |
+        helm upgrade --install grafana grafana/grafana \
+          -f monitoring/grafana-values.yaml \
+          --namespace ns-monitoring --create-namespace
+
+    - name: Deploy Jenkins
+      if: github.event.head_commit.modified[0] == 'devops/jenkins-values.yaml'
+      run: |
+        helm upgrade --install jenkins jenkins/jenkins \
+          -f devops/jenkins-values.yaml \
+          --namespace ns-devops --create-namespace

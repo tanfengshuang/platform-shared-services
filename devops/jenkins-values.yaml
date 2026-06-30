@@ -1,0 +1,35 @@
+# Jenkins Helm values — 部署到 ns-devops
+namespaceOverride: ns-devops
+
+controller:
+  image: jenkins/jenkins:lts
+  tag: lts-jdk17
+  serviceType: ClusterIP
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  installPlugins:
+    - kubernetes:latest
+    - workflow-job:latest
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+
+persistence:
+  enabled: true
+  size: 8Gi
+
+agent:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "512Mi"
