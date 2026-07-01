@@ -1,0 +1,47 @@
+# 需要在 ns-devops namespace 中创建一个 GitHub Personal Token Secret
+# kubectl create secret generic github-token --namespace ns-devops \
+#   --from-literal=token=ghp_your_runner_token
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-runner
+  namespace: ns-devops
+  labels:
+    app: github-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-runner
+  template:
+    metadata:
+      labels:
+        app: github-runner
+    spec:
+      containers:
+        - name: runner
+          image: summerwind/actions-runner:latest
+          env:
+            - name: RUNNER_NAME_PREFIX
+              value: "eks-runner"
+            - name: RUNNER_LABELS
+              value: "eks,self-hosted"
+            - name: GITHUB_OWNER
+              value: "tanfengshuang"
+            - name: GITHUB_REPOSITORY
+              value: "log-analyze-agent"
+            - name: RUNNER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: github-token
+                  key: token
+          command:
+            - /start-runner.sh
+          resources:
+            requests:
+              cpu: "1"
+              memory: "2Gi"
+            limits:
+              cpu: "4"
+              memory: "8Gi"
